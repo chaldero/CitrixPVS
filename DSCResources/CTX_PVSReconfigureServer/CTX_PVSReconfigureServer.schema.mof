@@ -1,0 +1,19 @@
+
+[ClassVersion("1.0.0"), FriendlyName("PVSReconfigureServer")]
+class CTX_PVSReconfigureServer : OMI_BaseResource
+{
+    [Key, Description("Specifies the resource is a single instance, the value must be 'Yes'"), ValueMap{"Yes"}, Values{"Yes"}] String IsSingleInstance;
+    [Required, Description("PVS License server.")] String LicenseServer;
+    [Write, Description("PVS License server port.")] UInt64 LicenseServerPort;
+    [Write, Description("Streaming IP.")] String StreamingIP;
+    [Write, Description("Management IP.")] String ManagementIP;
+    [Write, Description("Additional Streaming IPs.")] String OtherStreamingIPs[];
+    [Write, Description("First streaming port.")] UInt64 FirstStreamingPort;
+    [Write, Description("Last streaming port.")] UInt64 LastStreamingPort;
+    [Write, Description("SOAP port.")] UInt64 SoapPort;
+    [Required, Description("Username for Service Account.")] String Username;
+    [Required, Description("Password for Service Account"), EmbeddedInstance("MSFT_Credential")] String Password;
+    [Write, Description("PXE Service.")] Boolean PXEService;
+    [Write, Description("Passwort Change interval.")] UInt64 PasswordManagementInverval;
+    [Write,ValueMap{"Present", "Absent"},Values{"Present", "Absent"}] String Ensure;
+};

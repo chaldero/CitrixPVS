@@ -1,0 +1,29 @@
+
+[ClassVersion("1.0.0"), FriendlyName("PVSCreateFarm")]
+class CTX_PVSCreateFarm : OMI_BaseResource
+{
+    [Key, Description("Specifies the resource is a single instance, the value must be 'Yes'"), ValueMap{"Yes"}, Values{"Yes"}] String IsSingleInstance;
+    [Required, Description("Database server for PVS SQl DB.")] String DatabaseServer;
+    [Write, Description("Database instance of database server.")] String DatabaseInstance;
+    [Write, Description("Database name of PVS SQL DB.")] String DatabaseName;
+    [Required, Description("PVS Farm name.")] String FarmName;
+    [Write, Description("PVS Site name.")] String SiteName;
+    [Write, Description("PVS Collection name.")] String CollectionName;
+    [Write, Description("PVS Store name.")] String StoreName;
+    [Required, Description("PVS Store path.")] String StorePath;
+    [Required, Description("PVS License server.")] String LicenseServer;
+    [Write, Description("PVS License server port.")] UInt64 LicenseServerPort;
+    [Write, Description("Streaming IP.")] String StreamingIP;
+    [Write, Description("Management IP.")] String ManagementIP;
+    [Write, Description("Additional Streaming IPs.")] String StreamingIPs[];
+    [Write, Description("First streaming port.")] UInt64 FirstStreamingPort;
+    [Write, Description("Last streaming port.")] UInt64 LastStreamingPort;
+    [Write, Description("SOAP port.")] UInt64 SoapPort;
+    [Required, Description("Username for Service Account.")] String Username;
+    [Required, Description("Password for Service Account."), EmbeddedInstance("MSFT_Credential")] String Password;
+    [Required, Description("Farm Admin Group Name.")] String FarmAdminGroupName;
+    [Write, Description("PXE Service.")] Boolean PXEService;
+    [Write, Description("Bootstrap file path.")] String BootstrapFile;
+    [Write, Description("Passwort Change interval.")] UInt64 PasswordManagementInverval;
+    [Write,ValueMap{"Present", "Absent"},Values{"Present", "Absent"}] String Ensure;
+};

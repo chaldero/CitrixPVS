@@ -467,10 +467,10 @@ function Set-TargetResource {
     {
         $params = "/a:$ConfWizardANSFile /o:$ConfigWizardLogFile"
         Write-Verbose "Command: $ConfigWizardEXE $params -WindowStyle Hidden -Wait"   
-        start-process $ConfigWizardEXE $params -WindowStyle Hidden -Wait  # There is no need for a try / catch statement since the ConfigWizard always exists with code 0
+        start-process -FilePath $ConfigWizardEXE -ArgumentList $params -WindowStyle Hidden -Wait  # There is no need for a try / catch statement since the ConfigWizard always exists with code 0
 
         # Create Store folders of all existing Stores
-        Import-Module “C:\Program Files\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll”
+        Import-Module "C:\Program Files\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll"
         $stores = (Get-PvsStore).Path
         foreach ($StorePath in $stores)
         {

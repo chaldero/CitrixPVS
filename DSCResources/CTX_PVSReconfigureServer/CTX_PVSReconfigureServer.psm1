@@ -59,19 +59,32 @@ function Get-TargetResource {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [System.UInt64] $PasswordManagementInverval = 7,
+        [System.UInt64] $PasswordManagementInverval = 7
 
-        [Parameter()]
-        [ValidateSet('Present', 'Absent')]
-        [System.String] $Ensure = 'Present'
     )
 
+    if (!(TestPVSInstalledRole -Role 'Console'))
+    {
+        Throw "PVS Console not found, please install PVS Console first..."
+    }
+
     try {
-        Write-Verbose "Loading module 'C:\Program Files\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll'"
-        Import-Module 'C:\Program Files\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll' -Verbose:$false
+        $key = "HKLM:\SOFTWARE\Citrix\ProvisioningServices"
+        $PVSConsoleTargetDir = Get-ItemPropertyValue -Path $key -Name ConsoleTargetDir -ErrorAction:SilentlyContinue
+        $PVSConsoleSnapin = $PVSConsoleTargetDir + "Citrix.PVS.SnapIn.dll"
+
+        if (Test-Path $PVSConsoleSnapin)
+        {
+            Write-Verbose "Loading module '$PVSConsoleSnapin'"
+            Import-Module $PVSConsoleSnapin -Verbose:$false
+        }
+        else
+        {
+            throw "PVS Console Snapin $PVSConsoleSnapin not found, make sure PVS Console is installed on the target server..."
+        }
     }
     catch {
-        throw "Error loading PVS Powershell module..."
+       throw "Error loading PVS Powershell module..."
     }
 
     try {
@@ -105,22 +118,13 @@ function Get-TargetResource {
             SoapPort                   = 0
             BootstrapFile              = ""
             PasswordManagementInverval = 0
-            StreamingIPs          = ""            
-            Ensure                     = "Absent"            
+            StreamingIPs               = ""                  
         }
 
+        return $targetResource
     }
-
+    $streamIPs = $pvsBootServer.Bootserver1_Ip.IPAddressToString, $pvsBootServer.Bootserver2_Ip.IPAddressToString, $pvsBootServer.Bootserver3_Ip.IPAddressToString, $pvsBootServer.Bootserver4_Ip.IPAddressToString | Where-Object { $_ -ne "0.0.0.0" }
     $targetResource = @{
-        DatabaseServer             = $pvsfarm.DatabaseServerName
-        DatabaseInstance           = $pvsfarm.DatabaseInstanceName
-        DatabaseName               = $pvsfarm.DatabaseName
-        FarmName                   = $pvsfarm.FarmName
-        SiteName                   = $pvsfarm.DefaultSiteName
-        CollectionName             = $pvsCollection
-        FarmAdminGroupName         = $pvsAuthGroup
-        StoreName                  = $pvsStore.StoreName
-        StorePath                  = $pvsStore.Path
         LicenseServer              = $pvsfarm.LicenseServer
         LicenseServerPort          = $pvsfarm.LicenseServerPort
         StreamingIP                = $pvsServerInfo.ContactIp
@@ -128,14 +132,9 @@ function Get-TargetResource {
         FirstStreamingPort         = $pvsServerInfo.FirstPort
         LastStreamingPort          = $pvsServerInfo.LastPort
         SoapPort                   = $pvsConnection.Port
-        BootstrapFile              = Get-ItemPropertyValue HKLM:\Software\Citrix\ProvisioningServices\Admin\ Bootstrap
+        BootstrapFile              = Get-ItemPropertyValue "HKLM:\Software\Citrix\ProvisioningServices\Admin\" "Bootstrap"
         PasswordManagementInverval = $pvsServerInfo.AdMaxPasswordAge
-        StreamingIPs          = $pvsBootServer.Bootserver1_Ip.IPAddressToString, $pvsBootServer.Bootserver2_Ip.IPAddressToString, $pvsBootServer.Bootserver3_Ip.IPAddressToString, $pvsBootServer.Bootserver4_Ip.IPAddressToString           
-        Ensure                     = "Absent"
-    }
-
-    if ($pvsfarm.FarmName -like $FarmName) {
-        $targetResource["Ensure"] = "Present"
+        StreamingIPs               = $streamIPs
     }
 
     return $targetResource
@@ -200,23 +199,47 @@ function Test-TargetResource {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [System.UInt64] $PasswordManagementInverval = 7,
+        [System.UInt64] $PasswordManagementInverval = 7
 
-        [Parameter()]
-        [ValidateSet('Present', 'Absent')]
-        [System.String] $Ensure = 'Present'
     )
 
     $targetResource = Get-TargetResource @PSBoundParameters;
-    $inDesiredState = $true;
+    $inCompliance = $true;
 
-    if ($Ensure -ne $targetResource.Ensure) {
-        Write-Verbose "Not in desired state..."
-        $inDesiredState = $false;
+    foreach ($property in $PSBoundParameters.Keys) {
+
+        if ($targetResource.ContainsKey($property)) {
+
+            $expected = $PSBoundParameters[$property];
+            $actual = $targetResource[$property];
+            if ($property -eq 'StreamingIPs')
+            {
+                if (@(Compare-Object $expected $actual).length -ne 0)
+                {
+                    Write-Verbose "Not in desired state, $property should be $expected, acutaly is $actual"
+                    $inCompliance = $false;
+                }
+            }
+            else
+            {
+                if ($expected -ne $actual) {
+                    Write-Verbose "Not in desired state, $property should be $expected, acutaly is $actual"
+                    $inCompliance = $false;
+                }
+            }
+
+        }
     }
+    if ($inCompliance) {
 
-    return $inDesiredState
+        Write-Verbose ("PVSReconfigureServer is in desired state.");
+        return $true;
+    }
+    else {
 
+        Write-Verbose ("PVSReconfigureServer is NOT in desired state.");
+        return $false;
+    }
 } #end function Test-TargetResource
 
 function Set-TargetResource {
@@ -279,11 +302,8 @@ function Set-TargetResource {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [System.UInt64] $PasswordManagementInverval = 7,
+        [System.UInt64] $PasswordManagementInverval = 7
 
-        [Parameter()]
-        [ValidateSet('Present', 'Absent')]
-        [System.String] $Ensure = 'Present'
     )
 
     # Get current IP address
@@ -293,7 +313,7 @@ function Set-TargetResource {
             {$_ -eq 0 } {
                 Write-Verbose "No enabled network card could be found!"
                 Write-Verbose "Please make sure at least one network card exists and is connected to the network."
-                Exit 1
+                #throw "No enabled network card found"
             }
             {$_ -gt 1 } {
                 Write-Verbose "More than one enabled network card was found! This script cannot determine which network card to use."
@@ -311,13 +331,7 @@ function Set-TargetResource {
     
     }
     catch {
-        Write-Verbose "An error occurred trying to retrieve the IPv4 address (error: $($Error[0]))"
-        Exit 1
-    }
-
-    # Make sure the Store path exists
-    if (!(Test-Path $StorePath)) {
-        [ref] $null = New-Item -ItemType Directory -Force -Path $StorePath
+        throw "An error occurred trying to retrieve the IPv4 address (error: $($Error[0]))"
     }
 
     # At the moment it's only possible to join an existing Site and existing Store

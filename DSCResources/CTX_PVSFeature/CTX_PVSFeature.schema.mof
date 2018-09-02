@@ -2,10 +2,9 @@
 [ClassVersion("1.0.0"), FriendlyName("PVSFeature")]
 class CTX_PVSFeature : OMI_BaseResource
 {
-    [Key, Description("Specifies the resource is a single instance, the value must be 'Yes'"), ValueMap{"Yes"}, Values{"Yes"}] String IsSingleInstance;
     [Required, Description("Citrix PVS features to install."), ValueMap{"Console","Server","TDS"},Values{"Console","Server","TDS"}] String Roles[];
     [Required, Description("Citrix PVS installation media source path.")] String SourcePath;
     [Write, EmbeddedInstance("MSFT_Credential"), Description("Specifies a user account that has permission to install the feature.")] String Credential;
     [Write, Description("Installation log path")] String LogPath;
-    [Write,ValueMap{"Present", "Absent"},Values{"Present", "Absent"}] String Ensure;
+    [Key,ValueMap{"Present", "Absent"},Values{"Present", "Absent"}] String Ensure;
 };

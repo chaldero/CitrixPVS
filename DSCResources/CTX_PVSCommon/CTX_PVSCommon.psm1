@@ -183,7 +183,7 @@ function GetPVSUninstallString {
             Returns Citrix PVS uninstall string.
     #>
     [CmdletBinding()]
-    [OutputType([System.String[]])]
+    [OutputType([System.Collections.ArrayList])]
     param (
         ## Citrix PVS role to query.
         [Parameter(Mandatory)]
@@ -197,38 +197,43 @@ function GetPVSUninstallString {
             Select-Object DisplayName, UninstallString;
     
     
-        $uninstallStrings = @();
+        $uninstallStrings = New-Object System.Collections.ArrayList;
  
     
-            switch ($Role) {
-    
-                'Console' {
-                    $filter = '*Provisioning Services Console x64';
-                }
-                'Server' {
-                    $filter = '*Provisioning Services x64';
-                }
-                'TDS' {
-                    $filter = '*Provisioning Services Target Device x64';
-                }
+        switch ($Role) {
+
+            'Console' {
+                $filter = '*Provisioning Services Console x64';
             }
-    
-            $role_locales = $filter.Split(",")
-    
-            foreach ($locale in $role_locales) {
-                    
-                Write-Verbose "Locale: $locale"
-                $result = $installedProducts -like $locale;
-            
-                if ([System.String]::IsNullOrEmpty($result)) {
-    
-                }
-                elseif ($result) {
-                    $uninstallStrings = $Role;
-                    Write-Verbose "UninstallString for Role found: $Role"
-                    break;
-                }                    
+            'Server' {
+                $filter = '*Provisioning Services x64';
             }
+            'TDS' {
+                $filter = '*Provisioning Services Target Device x64';
+            }
+        }
+    
+        $role_locales = $filter.Split(",")
+
+        foreach ($locale in $role_locales) {
+                
+            Write-Verbose "Locale: $locale"
+
+            foreach ($installedProduct in $installedProducts)
+            {
+                if ($installedProduct.DisplayName -like $locale)
+                {
+                    Write-Verbose "$($installedProduct.DisplayName) found..."
+                    $null = $uninstallStrings.Add($installedProduct.UninstallString)
+                }
+
+            }
+        
+            if ([System.String]::IsNullOrEmpty($uninstallStrings)) {
+                Write-Host "ist null"
+            }
+                
+        }
     
         return $uninstallStrings;
     
@@ -327,5 +332,72 @@ function ResolvePVSSetupArguments {
 
     } #end process
 } #end function ResolveXDSetupArguments
+
+function RemovePVSServerFromFarm {
+    <#
+        .SYNOPSIS
+            Removes Citrix PVS server from farm.
+    #>
+    [CmdletBinding()]
+    [OutputType([System.Boolean])]
+    param (
+        ## Citrix PVS server to be removed.
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [System.String] $ServerName
+    )
+    process {
+        try
+        {
+            LoadPVSConsoleSnapin
+            Stop-PvsStreamService -ServerName $ServerName
+            Remove-PvsServer -ServerName $ServerName
+        }
+        catch
+        {
+            Write-Verbose "Removing PVS Server failed: $Error[0]"
+        }
+
+        return $true;
+    
+    } #end process
+} #end function RemovePVSServerFromFarm
+
+function LoadPVSConsoleSnapin {
+    <#
+        .SYNOPSIS
+            Loads PVS Console Powershell Snapin.
+    #>
+    [CmdletBinding()]
+    [OutputType([System.Boolean])]
+    param ()
+
+    process {
+
+        if (Get-Module Citrix.PVS.SnapIn) { return $true}
+
+        try {
+            $key = "HKLM:\SOFTWARE\Citrix\ProvisioningServices"
+            $PVSConsoleTargetDir = Get-ItemPropertyValue -Path $key -Name ConsoleTargetDir -ErrorAction:SilentlyContinue
+            $PVSConsoleSnapin = $PVSConsoleTargetDir + "Citrix.PVS.SnapIn.dll"
+    
+            if (Test-Path $PVSConsoleSnapin)
+            {
+                Write-Verbose "Loading module '$PVSConsoleSnapin'"
+                Import-Module $PVSConsoleSnapin -Verbose:$false
+            }
+            else
+            {
+                throw "PVS Console Snapin $PVSConsoleSnapin not found, make sure PVS Console is installed on the target server..."
+            }
+        }
+        catch {
+            throw "Error loading PVS Powershell module..."
+        }
+
+        return $true;
+    
+    } #end process
+} #end function RemovePVSServerFromFarm
 
 #endregion Private Functions

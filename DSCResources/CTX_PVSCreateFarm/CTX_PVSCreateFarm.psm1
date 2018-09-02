@@ -103,8 +103,19 @@ function Get-TargetResource {
     )
 
     try {
-        Write-Verbose "Loading module 'C:\Program Files\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll'"
-        Import-Module 'C:\Program Files\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll' -Verbose:$false
+        $key = "HKLM:\SOFTWARE\Citrix\ProvisioningServices"
+        $PVSConsoleTargetDir = Get-ItemPropertyValue -Path $key -Name ConsoleTargetDir -ErrorAction:SilentlyContinue
+        $PVSConsoleSnapin = $PVSConsoleTargetDir + "Citrix.PVS.SnapIn.dll"
+
+        if (Test-Path $PVSConsoleSnapin)
+        {
+            Write-Verbose "Loading module '$PVSConsoleSnapin'"
+            Import-Module $PVSConsoleSnapin -Verbose:$false
+        }
+        else
+        {
+            throw "PVS Console Snapin $PVSConsoleSnapin not found, make sure PVS Console is installed on the target server..."
+        }
     }
     catch {
         throw "Error loading PVS Powershell module..."
@@ -170,7 +181,7 @@ function Get-TargetResource {
         Ensure                     = "Absent"
     }
 
-    if ($pvsfarm.FarmName -like $FarmName) {
+    if ($pvsfarm.FarmName -eq $FarmName) {
         $targetResource["Ensure"] = "Present"
     }
 
@@ -393,116 +404,126 @@ function Set-TargetResource {
         [ValidateSet('Present', 'Absent')]
         [System.String] $Ensure = 'Present'
     )
+    if ($Ensure -eq 'Present')
+    {
+        # Get current IP address
+        try {
+            $AvailableNICs = gwmi Win32_NetworkAdapter -Filter "NetEnabled='True'"
+            switch ($AvailableNICs.Count) { 
+                {$_ -eq 0 } {
+                    Write-Verbose "No enabled network card could be found!"
+                    Write-Verbose "Please make sure at least one network card exists and is connected to the network."
+                    #throw "No enabled network card found"
+                }
+                {$_ -gt 1 } {
+                    Write-Verbose "More than one enabled network card was found! This script cannot determine which network card to use."
+                    Write-Verbose "Please enter the preferred IP address in the DSC configuration."
+                }
+                default {
+                    Write-Verbose "One enabled network card was found."
+                }
+            }
+            ForEach ($Adapter in $AvailableNICs) {
+                $IPv4Address = $(gwmi Win32_NetworkAdapterConfiguration -Filter "Index = '$($Adapter.Index)'").IPAddress[0]
+            }
+            Write-Verbose "The IPv4 address of the main network card is $IPv4Address"
 
-    # Get current IP address
-    try {
-        $AvailableNICs = gwmi Win32_NetworkAdapter -Filter "NetEnabled='True'"
-        switch ($AvailableNICs.Count) { 
-            {$_ -eq 0 } {
-                Write-Verbose "No enabled network card could be found!"
-                Write-Verbose "Please make sure at least one network card exists and is connected to the network."
-                Exit 1
-            }
-            {$_ -gt 1 } {
-                Write-Verbose "More than one enabled network card was found! This script cannot determine which network card to use."
-                Write-Verbose "Please enter the preferred IP address in the DSC configuration."
-            }
-            default {
-                Write-Verbose "One enabled network card was found."
-            }
+
         }
-        ForEach ($Adapter in $AvailableNICs) {
-            $IPv4Address = $(gwmi Win32_NetworkAdapterConfiguration -Filter "Index = '$($Adapter.Index)'").IPAddress[0]
+        catch {
+            throw "An error occurred trying to retrieve the IPv4 address (error: $($Error[0]))"
         }
-        Write-Verbose "The IPv4 address of the main network card is $IPv4Address"
 
-    
-    }
-    catch {
-        Write-Verbose "An error occurred trying to retrieve the IPv4 address (error: $($Error[0]))"
-        Exit 1
+        # Make sure the Store path exists
+        if (!(Test-Path $StorePath)) {
+            try {
+                #[ref] $null = New-Item -ItemType Directory -Force -Path $StorePath -ErrorAction Stop
+                New-Item -ItemType Directory -Force -Path $StorePath -ErrorAction Stop
+            } 
+            catch {
+                throw "Issue with the Path: $PSItem.Exception.Message" 
+            }              
+        }
 
-    }
+        $PVSConfig += "FarmConfiguration=1" + "`r`n"   # 0 = farm already configured, 1= create farm, 2 = join farm
 
-    # Make sure the Store path exists
-    if (!(Test-Path $StorePath)) {
-        [ref] $null = New-Item -ItemType Directory -Force -Path $StorePath
-    }
+        if ($PXEService) {
+            $PVSConfig += "PXEServiceType=1" + "`r`n"
+        }
 
-    $PVSConfig += "FarmConfiguration=1" + "`r`n"   # 0 = farm already configured, 1= create farm, 2 = join farm
+        $PVSConfig += "DatabaseServer=" + $DatabaseServer + "`r`n"  
+        if ( !([string]::IsNullOrEmpty($DatabaseInstance)) ) {
+            $PVSConfig += "DatabaseInstance=" + $DatabaseInstance + "`r`n"
+        }
+        $PVSConfig += "DatabaseNew=" + $DatabaseName + "`r`n"
+        $PVSConfig += "FarmNew=" + $FarmName + "`r`n"
+        $PVSConfig += "SiteNew=" + $SiteName + "`r`n"
+        $PVSConfig += "CollectionNew=" + $CollectionName + "`r`n"
+        $PVSConfig += "ADGroup=" + $FarmAdminGroupName + "`r`n"
+        $PVSConfig += "Store=" + $StoreName + "`r`n"
+        $PVSConfig += "DefaultPath=" + $StorePath + "`r`n"
+        $PVSConfig += "LicenseServer=" + $LicenseServer + "`r`n"
+        $PVSConfig += "LicenseServerPort=" + $LicenseServerPort + "`r`n"
+        $PVSConfig += "UserName=" + $Username + "`r`n"
+        $PVSConfig += "UserPass=" + $Password.GetNetworkCredential().Password + "`r`n"
+        $PVSConfig += "PasswordManagementInterval=" + $PasswordManagementInverval + "`r`n"
 
-    if ($PXEService) {
-        $PVSConfig += "PXEServiceType=1" + "`r`n"
-    }
-
-    $PVSConfig += "DatabaseServer=" + $DatabaseServer + "`r`n"  
-    if ( !([string]::IsNullOrEmpty($DatabaseInstance)) ) {
-        $PVSConfig += "DatabaseInstance=" + $DatabaseInstance + "`r`n"
-    }
-    $PVSConfig += "DatabaseNew=" + $DatabaseName + "`r`n"
-    $PVSConfig += "FarmNew=" + $FarmName + "`r`n"
-    $PVSConfig += "SiteNew=" + $SiteName + "`r`n"
-    $PVSConfig += "CollectionNew=" + $CollectionName + "`r`n"
-    $PVSConfig += "ADGroup=" + $FarmAdminGroupName + "`r`n"
-    $PVSConfig += "Store=" + $StoreName + "`r`n"
-    $PVSConfig += "DefaultPath=" + $StorePath + "`r`n"
-    $PVSConfig += "LicenseServer=" + $LicenseServer + "`r`n"
-    $PVSConfig += "LicenseServerPort=" + $LicenseServerPort + "`r`n"
-    $PVSConfig += "UserName=" + $Username + "`r`n"
-    $PVSConfig += "UserPass=" + $Password.GetNetworkCredential().Password + "`r`n"
-    $PVSConfig += "PasswordManagementInterval=" + $PasswordManagementInverval + "`r`n"
-
-    if ( [string]::IsNullOrEmpty($StreamingIP) ) {
-        $PVSConfig += "StreamNetworkAdapterIP=" + $IPv4Address + "`r`n"
-    }
-    else {
-        $PVSConfig += "StreamNetworkAdapterIP=" + $StreamingIP + "`r`n"
-    }
-
-    if ( [string]::IsNullOrEmpty($ManagementIP) ) {
-        $PVSConfig += "ManagementNetwworkAdapterIP=" + $IPv4Address + "`r`n"
-    }
-    else {
-        $PVSConfig += "ManagementNetwworkAdapterIP=" + $ManagementIP + "`r`n"
-    }
-
-    $PVSConfig += "IpcPortBase=" + $FirstStreamingPort + "`r`n"
-    $PVSConfig += "IpcPortCount=" + ($LastStreamingPort - $FirstStreamingPort) + "`r`n"
-    $PVSConfig += "SoapPort=" + $SoapPort + "`r`n"
-    $PVSConfig += "BootstrapFile=" + $BootstrapFile + "`r`n"
-
-    if ( [string]::IsNullOrEmpty($StreamingIPs) ) {
         if ( [string]::IsNullOrEmpty($StreamingIP) ) {
-            $PVSConfig += "LS1=" + $IPv4Address + ",0.0.0.0,0.0.0.0,6910" + "`r`n"
+            $PVSConfig += "StreamNetworkAdapterIP=" + $IPv4Address + "`r`n"
         }
         else {
-            $PVSConfig += "LS1=" + $StreamingIP + ",0.0.0.0,0.0.0.0,6910" + "`r`n"
+            $PVSConfig += "StreamNetworkAdapterIP=" + $StreamingIP + "`r`n"
+        }
+
+        if ( [string]::IsNullOrEmpty($ManagementIP) ) {
+            $PVSConfig += "ManagementNetwworkAdapterIP=" + $IPv4Address + "`r`n"
+        }
+        else {
+            $PVSConfig += "ManagementNetwworkAdapterIP=" + $ManagementIP + "`r`n"
+        }
+
+        $PVSConfig += "IpcPortBase=" + $FirstStreamingPort + "`r`n"
+        $PVSConfig += "IpcPortCount=" + ($LastStreamingPort - $FirstStreamingPort) + "`r`n"
+        $PVSConfig += "SoapPort=" + $SoapPort + "`r`n"
+        $PVSConfig += "BootstrapFile=" + $BootstrapFile + "`r`n"
+
+        if ( [string]::IsNullOrEmpty($StreamingIPs) ) {
+            if ( [string]::IsNullOrEmpty($StreamingIP) ) {
+                $PVSConfig += "LS1=" + $IPv4Address + ",0.0.0.0,0.0.0.0,6910" + "`r`n"
+            }
+            else {
+                $PVSConfig += "LS1=" + $StreamingIP + ",0.0.0.0,0.0.0.0,6910" + "`r`n"
+            }
+        }
+        else {
+            # ALL Streaming IPs hinzufügen
+            $i = 1
+            foreach ($ip in $StreamingIPs) {
+                $PVSConfig += "LS" + $i + "=" + $StreamingIPs[$i - 1] + ",0.0.0.0,0.0.0.0,6910" + "`r`n"   
+                ++$i
+            }
+        }
+
+        # Create answer file
+        $ConfWizardANSFile = "$env:Temp\ConfigWizardPVS.ans"
+
+        Set-Content $ConfWizardANSFile -value ($PVSConfig) -Encoding Unicode -Force
+
+        # Execute the ConfigWizard and either join or create the Provisioning Server farm
+        $ConfigWizardEXE = "$env:ProgramFiles\Citrix\Provisioning Services\ConfigWizard.exe"
+        $ConfigWizardLogFile = "$env:Temp\PVSConfigWizard.log"
+        if ( Test-Path $ConfigWizardEXE ) {
+            $params = "/a:$ConfWizardANSFile /o:$ConfigWizardLogFile"
+            Write-Verbose "Command: $ConfigWizardEXE $params -WindowStyle Hidden -Wait"   
+            start-process -FilePath "$ConfigWizardEXE" -ArgumentList $params -WindowStyle Hidden -Wait  # There is no need for a try / catch statement since the ConfigWizard always exists with code 0
+        }
+        else {
+            throw [System.IO.FileNotFoundException] "ConfigWizard.exe not found"
         }
     }
-    else {
-        # ALL Streaming IPs hinzufügen
-        $i = 1
-        foreach ($ip in $StreamingIPs) {
-            $PVSConfig += "LS" + $i + "=" + $StreamingIPs[$i - 1] + ",0.0.0.0,0.0.0.0,6910" + "`r`n"   
-            ++$i
-        }
-    }
-
-    # Create answer file
-    $ConfWizardANSFile = "$env:Temp\ConfigWizardPVS.ans"
-
-    Set-Content $ConfWizardANSFile -value ($PVSConfig) -Encoding Unicode -Force
-
-    # Execute the ConfigWizard and either join or create the Provisioning Server farm
-    $ConfigWizardEXE = "$env:ProgramFiles\Citrix\Provisioning Services\ConfigWizard.exe"
-    $ConfigWizardLogFile = "$env:Temp\PVSConfigWizard.log"
-    if ( Test-Path $ConfigWizardEXE ) {
-        $params = "/a:$ConfWizardANSFile /o:$ConfigWizardLogFile"
-        Write-Verbose "Command: $ConfigWizardEXE $params -WindowStyle Hidden -Wait"   
-        start-process $ConfigWizardEXE $params -WindowStyle Hidden -Wait  # There is no need for a try / catch statement since the ConfigWizard always exists with code 0
-    }
-    else {
-        Write-Error "ConfigWizard.exe not found..."
+    else
+    {
+        RemovePVSServerFromFarm
     }
 
 } #end function Set-TargetResource

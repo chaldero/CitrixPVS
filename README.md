@@ -73,14 +73,12 @@ This resource is used to install/uninstall PVS features: Server, Console and Tar
 
 #### Parameters
 
-* **`[String]` IsSingleInstance** _(Key)_: Specifies the resource is a single instance, the value must be 'Yes'. Default is 'Yes'
-* **`[String[]]` Roles** _(Required)_: Citrix PVS features to install. { Console | Server | TDS 
-}
+* **`[String[]]` Roles** _(Required)_: Citrix PVS features to install. { Console | Server | TDS }
 * **`[String]` SourcePath** _(Required)_: Citrix PVS installation media source path.
 * **`[PSCredential]` Credential** _(Write)_: Specify a user account that is local Admin and can install the PVS feature.
 * **`[String]` LogPath** _(Write)_: Installation log path. Defaults to %temp%\Citrix\PVS Installer\PVS.log of the running user.
-* **`[String]` Ensure** _(Write)_: Specifies if the PVS feature should be
-  present or absent. Default is Present. { *Present* | Absent }
+* **`[String]` Ensure** _(Key)_: Specifies if the PVS feature should be
+  present or absent. { Present | Absent }
 
 #### Examples
 
@@ -200,13 +198,11 @@ This resource is used to reconfigure an existing PVS server.
 * **`[Boolean]` PXEService** _(Write)_: PXE service needs to run on this server. Default is $true.
 * **`[String` BootstrapFile** _(Write)_: Bootstrap file path. Defaults to 'C:\ProgramData\Citrix\Provisioning Services\Tftpboot\ARDBP32.BIN'.
 * **`[String]` PasswordManagementInverval** _(Write)_: Passwort Change interval. Default is 7 days.
-* **`[String]` Ensure** _(Write)_: Specifies if the PVS Farm should be
-  present or absent. Default is Present. { *Present* | Absent }
 
 
 #### Examples
 
-* [Join an existing PVS Farm](/Examples/Resources/PVSJoinFarm/1-PVSReconfigureServer.ps1)
+* [Reconfigure an existing PVS Server](/Examples/Resources/PVSReconfigureServer/1-PVSReconfigureServer.ps1)
 
 ### PVSWaitForFarm
 
@@ -223,15 +219,15 @@ This resource is used to wait a certain time for a PVS Farm and continue when th
 
 * **`[String]` FarmName** _(Required)_: PVS Farm name to look for.
 * **`[String]` ExistingPVSServer** _(Key)_: Citrix PVS Server name.
-* **`[UInt64]` SoapPort** _(Write)_: SOAP port.
-* **`[UInt64]` RetryIntervalSec** _(Write)_: Interval between retries in seconds.
-* **`[UInt32]` RetryCount** _(Write)_: Retry count before timing out.
+* **`[UInt32]` SoapPort** _(Write)_: SOAP port. Defaults to 54321
+* **`[UInt64]` RetryIntervalSec** _(Write)_: Interval between retries in seconds. Defaults to 30
+* **`[UInt32]` RetryCount** _(Write)_: Retry count before timing out. Defaults to 10
 * **`[PSCredential]` Credential** _(Write)_: Specify a user account that is PVS Farm admin and can remotely invoke a PS command on the PVS server.
 
 
 #### Examples
 
-* [Wait for an existing PVS Farm](/Examples/Resources/PVSJoinFarm/1-PVSWaitForFarm.ps1)
+* [Wait for an existing PVS Farm](/Examples/Resources/PVSWaitForFarm/1-PVSWaitForFarm.ps1)
 
 
 

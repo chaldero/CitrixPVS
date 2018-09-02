@@ -14,6 +14,9 @@
                             'ResolvePVSSetupArguments',
                             'StartWaitProcess',
                             'TestPVSInstalledRole',
-                            'TestPVSModule'
+                            'TestPVSModule',
+                            'GetPVSUninstallString',
+                            'LoadPVSConsoleSnapin',
+                            'RemovePVSServerFromFarm'
                         );
 }

@@ -15,6 +15,10 @@ function Get-TargetResource {
         [System.String] $ExistingPVSServer,
 
         [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [System.UInt32] $SoapPort = 54321,
+
+        [Parameter()]
         [ValidateNotNull()]
         [System.Management.Automation.PSCredential]
         [System.Management.Automation.CredentialAttribute()]
@@ -62,6 +66,10 @@ function Test-TargetResource {
         [System.String] $ExistingPVSServer,
 
         [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [System.UInt32] $SoapPort = 54321,
+
+        [Parameter()]
         [ValidateNotNull()]
         [System.Management.Automation.PSCredential]
         [System.Management.Automation.CredentialAttribute()]
@@ -78,10 +86,10 @@ function Test-TargetResource {
     $inDesiredState = $true;
 
     if ($null -ne $Credential) {   
-        $retrievedFarmName = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort 54321 -Credential $Credential
+        $retrievedFarmName = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort $SoapPort -Credential $Credential
     }
     else {
-        $retrievedFarmName = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort 54321
+        $retrievedFarmName = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort $SoapPort
     }
     
     if ($retrievedFarmName -ne $targetResource.Ensure) {
@@ -109,6 +117,10 @@ function Set-TargetResource {
         [System.String] $ExistingPVSServer,
 
         [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [System.UInt32] $SoapPort = 54321,
+
+        [Parameter()]
         [ValidateNotNull()]
         [System.Management.Automation.PSCredential]
         [System.Management.Automation.CredentialAttribute()]
@@ -127,10 +139,10 @@ function Set-TargetResource {
 
 
         if ($null -ne $Credential) {   
-            $FarmNameFound = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort 54321 -Credential $Credential
+            $FarmNameFound = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort $SoapPort -Credential $Credential
         }
         else {
-            $FarmNameFound = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort 54321
+            $FarmNameFound = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort $SoapPort
         }
             
         if ($FarmNameFound) {
@@ -167,7 +179,7 @@ function TestPVSFarm
 
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [System.String] $SoapPort,
+        [System.UInt32] $SoapPort  = 54321,
 
         [Parameter()]
         [ValidateNotNull()]
@@ -184,12 +196,13 @@ function TestPVSFarm
         
             #Set-PvsConnection -Server $Using:ExistingPVSServer -Port $Using:SoapPort #-ErrorAction SilentlyContinue;
             Write-Verbose "PVS Server: $Using:ExistingPVSServer"
+            Write-Verbose "PVS Port: $Using:SoapPort"
             Write-Verbose "Looking for PVS Farm: $Using:FarmName"
             Set-PvsConnection -Server $Using:ExistingPVSServer -Port $Using:SoapPort -ErrorAction SilentlyContinue
             $retrievedFarmName = (Get-PvsFarm -ErrorAction SilentlyContinue).FarmName
         }
         catch {
-
+            #throw $Error[0]
         } 
 
         if ($retrievedFarmName -like $Using:FarmName) 

@@ -5,9 +5,6 @@ function Get-TargetResource {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSDSCUseVerboseMessageInDSCResource', '')]
     [OutputType([System.Collections.Hashtable])]
     param (
-        [Parameter(Mandatory)]
-        [ValidateSet('Yes')]
-        [System.String] $IsSingleInstance,
 
         [Parameter(Mandatory)]
         [ValidateSet('Console', 'Server', 'TDS')]
@@ -23,7 +20,7 @@ function Get-TargetResource {
         [System.Management.Automation.CredentialAttribute()]
         $Credential,
 
-        [Parameter()]
+        [Parameter(Mandatory)]
         [ValidateSet('Present', 'Absent')]
         [System.String] $Ensure = 'Present',
 
@@ -54,10 +51,6 @@ function Test-TargetResource {
     param (
 
         [Parameter(Mandatory)]
-        [ValidateSet('Yes')]
-        [System.String] $IsSingleInstance,
-
-        [Parameter(Mandatory)]
         [ValidateSet('Console', 'Server', 'TDS')]
         [System.String[]] $Roles,
 
@@ -71,7 +64,7 @@ function Test-TargetResource {
         [System.Management.Automation.CredentialAttribute()]
         $Credential,
 
-        [Parameter()]
+        [Parameter(Mandatory)]
         [ValidateSet('Present', 'Absent')]
         [System.String] $Ensure = 'Present',
 
@@ -103,10 +96,6 @@ function Set-TargetResource {
     param (
 
         [Parameter(Mandatory)]
-        [ValidateSet('Yes')]
-        [System.String] $IsSingleInstance,
-
-        [Parameter(Mandatory)]
         [ValidateSet('Console', 'Server', 'TDS')]
         [System.String[]] $Roles,
 
@@ -120,7 +109,7 @@ function Set-TargetResource {
         [System.Management.Automation.CredentialAttribute()]
         $Credential,
 
-        [Parameter()]
+        [Parameter(Mandatory)]
         [ValidateSet('Present', 'Absent')]
         [System.String] $Ensure = 'Present',
 
@@ -139,52 +128,72 @@ function Set-TargetResource {
         if ($Ensure -eq 'Present') {
 
             foreach ($role in $Roles) {
-                Write-Verbose ($localizedData.InstallingRole -f $role);
-                $installArguments = ResolvePVSSetupArguments -Role $role -LogPath $LogPath;                
-    
-                Write-Verbose ($localizedData.LogDirectorySet -f $logPath);
-                Write-Verbose ($localizedData.SourceDirectorySet -f $SourcePath);
+
+                if (!(TestPVSInstalledRole -Role $role))
+                {
+                    Write-Verbose ($localizedData.InstallingRole -f $role);
+                    $installArguments = ResolvePVSSetupArguments -Role $role -LogPath $LogPath;                
         
-                $startWaitProcessParams = @{
-                    FilePath     = ResolvePVSSetupMedia -Role $role -SourcePath $SourcePath;
-                    ArgumentList = $installArguments;
+                    Write-Verbose ($localizedData.LogDirectorySet -f $logPath);
+                    Write-Verbose ($localizedData.SourceDirectorySet -f $SourcePath);
+            
+                    $startWaitProcessParams = @{
+                        FilePath     = ResolvePVSSetupMedia -Role $role -SourcePath $SourcePath;
+                        ArgumentList = $installArguments;
+                    }
+            
+                    if ($PSBoundParameters.ContainsKey('Credential')) {
+                        $startWaitProcessParams['Credential'] = $Credential;
+                    }
+            
+                    $exitCode = StartWaitProcess @startWaitProcessParams -Verbose:$Verbose;
+                    # Check for reboot
+                    if ($exitCode -eq 3010) {
+                        $global:DSCMachineStatus = 1;
+                    }
                 }
-        
-                if ($PSBoundParameters.ContainsKey('Credential')) {
-                    $startWaitProcessParams['Credential'] = $Credential;
-                }
-        
-                $exitCode = StartWaitProcess @startWaitProcessParams -Verbose:$Verbose;
-                # Check for reboot
-                if ($exitCode -eq 3010) {
-                    $global:DSCMachineStatus = 1;
-                }
+
             }
 
         }
         else {
 
+            if ($Roles -contains "Server")
+            {
+                # Remove PVS Server from Farm
+                RemovePVSServerFromFarm
+            }
+
             foreach ($role in $Roles) {
+
                 ## Uninstall
                 Write-Verbose ($localizedData.UninstallingRole -f $role);
             
-                $uninstall = GetPVSUninstallString -Role $role
+                $uninstall = GetPVSUninstallString -Role $role;
 
-                $startWaitProcessParams = @{
-                    FilePath     = "cmd.exe";
-                    ArgumentList = "/c '$uninstall'";
-                }
-            
-                if ($PSBoundParameters.ContainsKey('Credential')) {
-                    $startWaitProcessParams['Credential'] = $Credential;
+                foreach ($uninstaller in $uninstall)
+                {
+
+                    $tst = $uninstaller.ToLower().Replace("/i","/x") + " /quiet"
+                    $startWaitProcessParams = @{
+                        FilePath     = "c:\windows\System32\cmd.exe";
+                        ArgumentList = "/c $tst";
+                    }
+                
+                    if ($PSBoundParameters.ContainsKey('Credential')) {
+                        $startWaitProcessParams['Credential'] = $Credential;
+                    }
+
+                    Rename-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -Name "PendingFileRenameOperations" -NewName "PendingFileRenameOperations_temp"
+                    $exitCode = StartWaitProcess @startWaitProcessParams -Verbose:$Verbose;
+                    Rename-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -Name "PendingFileRenameOperations_temp" -NewName "PendingFileRenameOperations"
+                    # Check for reboot
+                    if ($exitCode -eq 3010) {
+                        $global:DSCMachineStatus = 1;
+                    }
                 }
 
-                #$startWaitProcessParams = Start-Process -FilePath cmd.exe -ArgumentList '/c', $application.UninstallString -wait
-                $exitCode = StartWaitProcess @startWaitProcessParams -Verbose:$Verbose;
-                # Check for reboot
-                if ($exitCode -eq 3010) {
-                    $global:DSCMachineStatus = 1;
-                }
+
             }
 
 

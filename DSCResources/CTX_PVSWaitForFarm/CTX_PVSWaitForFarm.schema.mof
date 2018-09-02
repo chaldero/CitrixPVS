@@ -4,6 +4,7 @@ class CTX_PVSWaitForFarm : OMI_BaseResource
 {
     [Required, Description("Citrix PVS Farm name.")] String FarmName;
     [Key, Description("Citrix PVS Server name.")] String ExistingPVSServer;
+    [Write, Description("SOAP Port of the PVS Server to connect to.")] Uint32 SoapPort;
     [Write, Description("Interval between retries in seconds.")] Uint64 RetryIntervalSec;
     [Write, Description("Retry count before timing out.")] Uint32 RetryCount;
     [Write, EmbeddedInstance("MSFT_Credential"), Description("Specify a user account that is PVS Farm admin.")] String Credential;

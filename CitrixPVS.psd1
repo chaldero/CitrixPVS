@@ -1,5 +1,5 @@
 @{
-    ModuleVersion        = '1.0.1';
+    ModuleVersion        = '1.0.2';
     GUID                 = '7c9cfb51-e89f-4d8e-9142-2f77700f3b72';
     Author               = 'Michael Wenger';
     CompanyName          = 'arcade solutions ag';

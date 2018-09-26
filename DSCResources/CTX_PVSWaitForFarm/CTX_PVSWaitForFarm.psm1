@@ -32,8 +32,8 @@ function Get-TargetResource {
     )
 
     try {
-        Write-Verbose "Loading module 'C:\Program Files\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll'"
-        Import-Module 'C:\Program Files\Citrix\Provisioning Services Console\Citrix.PVS.SnapIn.dll' -Verbose:$false
+        Write-Verbose "Loading Powershell Citrix PVS Snapin..."
+        LoadPVSConsoleSnapin
     }
     catch {
         throw "Error loading PVS Powershell module..."
@@ -86,13 +86,13 @@ function Test-TargetResource {
     $inDesiredState = $true;
 
     if ($null -ne $Credential) {   
-        $retrievedFarmName = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort $SoapPort -Credential $Credential
+        $FarmNameFound = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort $SoapPort -Credential $Credential
     }
     else {
-        $retrievedFarmName = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort $SoapPort
+        $FarmNameFound = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort $SoapPort
     }
     
-    if ($retrievedFarmName -ne $targetResource.Ensure) {
+    if (!($FarmNameFound)) {
         Write-Verbose "Not in desired state..."
         $inDesiredState = $false;
     }
@@ -136,7 +136,6 @@ function Set-TargetResource {
     for ($count = 0; $count -lt $RetryCount; $count++) {
 
         Write-Verbose "Looking for PVS FARM $FarmName on server $ExistingPVSServer"
-
 
         if ($null -ne $Credential) {   
             $FarmNameFound = TestPVSFarm -FarmName $FarmName -ExistingPVSServer $ExistingPVSServer -SoapPort $SoapPort -Credential $Credential

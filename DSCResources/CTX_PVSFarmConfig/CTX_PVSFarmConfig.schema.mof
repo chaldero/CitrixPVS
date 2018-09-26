@@ -2,30 +2,20 @@
 [ClassVersion("1.0.0"), FriendlyName("PVSFarmConfig")]
 class CTX_PVSFarmConfig : OMI_BaseResource
 {
-    [Key, Description("Specifies the resource is a single instance, the value must be 'Yes'"), ValueMap{"Yes"}, Values{"Yes"}] String IsSingleInstance;
-    [Required, Description("Database server for PVS SQl DB.")] String DatabaseServer;
-    [Write, Description("Database instance of database server.")] String DatabaseInstance;
-    [Write, Description("Database name of PVS SQl DB.")] String DatabaseName;
-    [Required, Description("PVS Farm name.")] String FarmName;
-    [Write, Description("PVS Site name.")] String SiteName;
-    [Write, Description("PVS Collection name.")] String CollectionName;
-    [Write, Description("PVS Store name.")] String StoreName;
-    [Required, Description("PVS Store path.")] String StorePath;
-    [Required, Description("PVS License server.")] String LicenseServer;
-    [Write, Description("PVS License server port.")] UInt64 LicenseServerPort;
-    [Write, Description("Streaming IP.")] String StreamingIP;
-    [Write, Description("Management IP.")] String ManagementIP;
-    [Write, Description("Additional Streaming IPs.")] String OtherStreamingIPs[];
-    [Write, Description("First streaming port.")] UInt64 FirstStreamingPort;
-    [Write, Description("Last streaming port.")] UInt64 LastStreamingPort;
+    [Key, Description("PVS Farm name.")] String FarmName;
+    [Write, Description("Description of the PVS Farm.")] String Description;
+    [Write, Description("True when Auto Add is enabled, false otherwise.")] Boolean AutoAddEnabled;
+    [Write, Description("True when Auditing is enabled, false otherwise.")] Boolean AuditingEnabled;
+    [Write, Description("Name of the Site to place new Devices into automatically.")] String DefaultSiteName;
+    [Write, Description("True when Offline Database Support is enabled, false otherwise.")] Boolean OfflineDatabaseSupportEnabled;
+    [Write, Description("License server name.")] String LicenseServer;
+    [Write, Description("License server port.")] UInt32 LicenseServerPort;
+    [Write, Description("License server trade up, when set to true.")] Boolean LicenseTradeUp;
+    [Write, Description("True when Automatic Merge is enabled, false otherwise. If the number of versions becomes more than the MaxVersions value, a merge will occur at the end of PromoteDiskVersion.")] Boolean AutomaticMergeEnabled;
+    [Write, Description("Maximum number a version of a Disk that can exist before a merge will automatically occur. Min=3, Max=50.")] UInt32 MaxVersions;
+    [Write, Description("Mode to place the version in after a merge has occurred. Values are: 0 (Production), 1 (Test) and 2 (Maintenance). Min=0, Max=2.")] UInt32 MergeMode;
+    [Write, Description("PVS Server name to connect to. Defaults to 'localhost'.")] String PVSServerName;
     [Write, Description("SOAP port.")] UInt64 SoapPort;
-    [Required, Description("Username for Service Account.")] String Username;
-    [Required, Description("Password for Service Account"), EmbeddedInstance("MSFT_Credential")] String Password;
-    [Required, Description("Farm Admin Group Name.")] String FarmAdminGroupName;
-    [Required, Description("Farm configuration.")] String FarmConfiguration;
-    [Write, Description("PXE Service.")] Boolean PXEService;
-    [Write, Description("Bootstrap file path.")] String BootstrapFile;
-    [Write, Description("Passwort Change interval.")] UInt64 PasswordManagementInverval;
-    [Write, EmbeddedInstance("MSFT_Credential"), Description("Specifies a user account that has permission to install and configure PVS.")] String Credential;
-    [Write,ValueMap{"Present", "Absent"},Values{"Present", "Absent"}] String Ensure;
+    [Write, Description("Username to connect to PVS server.")] String Username;
+    [Write, Description("Password to connect to PVS server"), EmbeddedInstance("MSFT_Credential")] String Password;
 };

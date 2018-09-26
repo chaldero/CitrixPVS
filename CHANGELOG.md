@@ -1,5 +1,11 @@
 # Change log for CitrixPVS
 
+## Version 1.0.2
+
+- Optimizations for PVSWaitForFarm Resource
+- Pester Tests implemented for PVSWaitForFarm, PVSFarmConfig
+- DSC Resource PVSFarmConfig added
+
 ## Version 1.0.1
 
 - Parameter SoapPort added to PVSWaitForFarm Resource
@@ -7,7 +13,6 @@
 - Examples added
 - PVSCommon module extended
 - PVSFeature bugfixing and isSingleInstance removed, Ensure is now mandatory
-
 
 ## Version 1.0.0
 

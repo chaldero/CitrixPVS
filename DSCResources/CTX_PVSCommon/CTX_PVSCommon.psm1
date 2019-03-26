@@ -384,7 +384,7 @@ function LoadPVSConsoleSnapin {
             if (Test-Path $PVSConsoleSnapin)
             {
                 Write-Verbose "Loading module '$PVSConsoleSnapin'"
-                Import-Module $PVSConsoleSnapin -Verbose:$false
+                Import-Module $PVSConsoleSnapin -Global -Verbose:$false
             }
             else
             {
@@ -398,6 +398,6 @@ function LoadPVSConsoleSnapin {
         return $true;
     
     } #end process
-} #end function RemovePVSServerFromFarm
+} #end function LoadPVSConsoleSnapin
 
 #endregion Private Functions

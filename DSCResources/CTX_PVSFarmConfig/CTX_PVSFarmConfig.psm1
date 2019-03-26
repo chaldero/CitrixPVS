@@ -75,7 +75,7 @@ function Get-TargetResource {
 
     try {
         Write-Verbose "Loading Powershell Citrix PVS Snapin..."
-        LoadPVSConsoleSnapin
+        [reg] $null = LoadPVSConsoleSnapin
     }
     catch {
        throw "Error loading PVS Powershell module..."

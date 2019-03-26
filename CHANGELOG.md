@@ -1,5 +1,9 @@
 # Change log for CitrixPVS
 
+## Version 1.0.3
+
+- Small bugfix in LoadPVSConsoleSnapin helper function
+
 ## Version 1.0.2
 
 - Optimizations for PVSWaitForFarm Resource

@@ -10,7 +10,7 @@ Import-Module (Join-Path $moduleRoot -ChildPath "\DSCResources\$sut\$sut.psm1") 
 Import-Module (Join-Path $moduleRoot -ChildPath "\Tests\Unit\Stubs\PVSConsoleStub.psm1") -Force -Global;
 
 $pathli = (Join-Path $moduleRoot -ChildPath "\Tests\Unit\Stubs\PVSConsoleStub.psm1")
-Write-Host $pathli
+#Write-Host $pathli
 
 InModuleScope $sut {
 
@@ -69,7 +69,7 @@ InModuleScope $sut {
                 Role                          = 100
             }
 
-            Mock -CommandName LoadPVSConsoleSnapin -MockWith {  } 
+            Mock -CommandName 'LoadPVSConsoleSnapin' -MockWith {   } 
             Mock -CommandName Get-PvsFarm -MockWith { return $MockPVSFarm }
             
 

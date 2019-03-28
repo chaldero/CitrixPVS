@@ -82,7 +82,7 @@ This resource is used to install/uninstall PVS features: Server, Console and Tar
 
 #### Examples
 
-* [Install PVS Server and PVS Console](/Examples/Resources/PVSJoinFarm/1-InstallPVSServerConsole.ps1)
+* [Install PVS Server and PVS Console](/Examples/PVSJoinFarm/1-InstallPVSServerConsole.ps1)
 
 
 ### PVSCreateFarm
@@ -127,7 +127,7 @@ This resource is used to create a new PVS farm.
 
 #### Examples
 
-* [Create a new PVS Farm](/Examples/Resources/PVSCreateFarm/1-PVSCreateFarm.ps1)
+* [Create a new PVS Farm](/Examples/PVSCreateFarm/1-PVSCreateFarm.ps1)
 
 
 ### PVSJoinFarm
@@ -169,7 +169,7 @@ This resource is used to join an existing PVS farm.
 
 #### Examples
 
-* [Join an existing PVS Farm](/Examples/Resources/PVSJoinFarm/1-PVSJoinFarm.ps1)
+* [Join an existing PVS Farm](/Examples/PVSJoinFarm/1-PVSJoinFarm.ps1)
 
 ### PVSReconfigureServer
 
@@ -202,7 +202,7 @@ This resource is used to reconfigure an existing PVS server.
 
 #### Examples
 
-* [Reconfigure an existing PVS Server](/Examples/Resources/PVSReconfigureServer/1-PVSReconfigureServer.ps1)
+* [Reconfigure an existing PVS Server](/Examples/PVSReconfigureServer/1-PVSReconfigureServer.ps1)
 
 ### PVSWaitForFarm
 
@@ -227,7 +227,7 @@ This resource is used to wait a certain time for a PVS Farm and continue when th
 
 #### Examples
 
-* [Wait for an existing PVS Farm](/Examples/Resources/PVSWaitForFarm/1-PVSWaitForFarm.ps1)
+* [Wait for an existing PVS Farm](/Examples/PVSWaitForFarm/1-PVSWaitForFarm.ps1)
 
 
 

@@ -15,7 +15,6 @@ function Get-TargetResource {
         [System.String] $DatabaseServer,
 
         [Parameter()]
-        [ValidateNotNullOrEmpty()]
         [System.String] $DatabaseInstance,
 
         [Parameter()]
@@ -203,7 +202,6 @@ function Test-TargetResource {
         [System.String] $DatabaseServer,
 
         [Parameter()]
-        [ValidateNotNullOrEmpty()]
         [System.String] $DatabaseInstance,
 
         [Parameter()]
@@ -318,7 +316,6 @@ function Set-TargetResource {
         [System.String] $DatabaseServer,
 
         [Parameter()]
-        [ValidateNotNullOrEmpty()]
         [System.String] $DatabaseInstance,
 
         [Parameter()]

@@ -147,6 +147,14 @@ function Set-TargetResource {
                     }
             
                     $exitCode = StartWaitProcess @startWaitProcessParams -Verbose:$Verbose;
+
+                    if ($role -eq "Server")
+                    {
+                        # Copy CFsDep2.sys driver because unattended installation doesn't do that
+                        $PVSDriverPath = (Get-ItemPropertyValue HKLM:\SOFTWARE\citrix\ProvisioningServer -Name TargetDir) + "drivers\CFsDep2.sys"
+                        Copy-Item $PVSDriverPath "$($env:SystemRoot)\system32\drivers\" -Force                        
+                    }
+
                     # Check for reboot
                     if ($exitCode -eq 3010) {
                         $global:DSCMachineStatus = 1;

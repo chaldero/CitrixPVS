@@ -101,26 +101,35 @@ InModuleScope $sut {
                 { Set-TargetResource -Roles 'Console' -SourcePath 'Z:\HopefullyThisPathNeverExists' -Credential $mycreds -Ensure 'Present' } | Should Throw;
             }
 
-            It 'Throws with a valid file path.' {
+            It 'Throws with a valid file path and a wrong role name.' {
                 [ref] $null = New-Item -Path 'TestDrive:\PVS_Console_x64.exe' -ItemType File;
                 { Set-TargetResource -Role 'Controller' -SourcePath "$testDrivePath\Console\PVS_Console_x64.exe" -Ensure 'Present' } | Should Throw;
             }
+
+            Mock -CommandName StartWaitProcess -MockWith { return 0; }
+            Mock -CommandName ResolvePVSSetupMedia -MockWith { return $testDrivePath; }
+            Mock -CommandName ResolvePVSSetupArguments -MockWith { }
+            Mock -CommandName GetPVSUninstallString -MockWith { "UninstallString" }
+            Mock -CommandName Test-Path -MockWith { return $true; }
+            Mock -CommandName Rename-ItemProperty -ParameterFilter {$Path -eq "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager"} -MockWith {} 
+            Mock -CommandName Get-ItemPropertyValue -ParameterFilter {$Path -eq "HKLM:\SOFTWARE\citrix\ProvisioningServer"} -MockWith {}
+            Mock -CommandName Copy-Item -ParameterFilter {$Path -match "CFsDep2.sys" } -MockWith {}
 
             foreach ($state in @('Present','Absent')) {
                 foreach ($role in @('Console','TDS', 'Server')) {
                     It "runs a setup 1 time when ""Ensure"" = ""$state"", ""Role"" = ""$($role -join ',')"" and exit code ""0""" {
                         [System.Int32] $global:DSCMachineStatus = 0;
-                        Mock -CommandName StartWaitProcess -MockWith { return 0; }
-                        Mock -CommandName ResolvePVSSetupMedia -MockWith { return $testDrivePath; }
-                        Mock -CommandName ResolvePVSSetupArguments -MockWith { }
-                        Mock -CommandName GetPVSUninstallString -MockWith { "UninstallString" }
-                        Mock -CommandName Test-Path -MockWith { return $true; }
-                        Mock -CommandName Rename-ItemProperty -ParameterFilter {$Path -eq "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager"} -MockWith {} 
+                        
                         Set-TargetResource -Roles $role -SourcePath $testDrivePath -Ensure $state -Credential $mycreds;
                         [System.Int32] $global:DSCMachineStatus | Should Be 0;
                         Assert-MockCalled -CommandName StartWaitProcess -Exactly 1 -Scope It;
                     }
                 }
+            }
+
+            It "runs Copy-Item 1 time in order to copy CFsDep2.sys" {
+                Set-TargetResource -Roles $role -SourcePath $testDrivePath -Ensure 'Present' -Credential $mycreds;
+                Assert-MockCalled -CommandName Copy-Item -ParameterFilter {$Path -match "CFsDep2.sys" } -Exactly 1 -Scope It;
             }
 
             foreach ($state in @('Present','Absent')) {

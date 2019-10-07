@@ -1,5 +1,9 @@
 # Change log for CitrixPVS
 
+## Version 1.0.4
+
+- CFsDep2.sys Copy added due to issue in unattended installation
+
 ## Version 1.0.3
 
 - Small bugfix in LoadPVSConsoleSnapin helper function

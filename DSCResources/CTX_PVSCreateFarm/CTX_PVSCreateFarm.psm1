@@ -473,10 +473,10 @@ function Set-TargetResource {
         }
 
         if ( [string]::IsNullOrEmpty($ManagementIP) ) {
-            $PVSConfig += "ManagementNetwworkAdapterIP=" + $IPv4Address + "`r`n"
+            $PVSConfig += "ManagementNetworkAdapterIP=" + $IPv4Address + "`r`n"
         }
         else {
-            $PVSConfig += "ManagementNetwworkAdapterIP=" + $ManagementIP + "`r`n"
+            $PVSConfig += "ManagementNetworkAdapterIP=" + $ManagementIP + "`r`n"
         }
 
         $PVSConfig += "IpcPortBase=" + $FirstStreamingPort + "`r`n"

@@ -151,8 +151,8 @@ function Set-TargetResource {
                     if ($role -eq "Server")
                     {
                         # Copy CFsDep2.sys driver because unattended installation doesn't do that
-                        $PVSDriverPath = (Get-ItemPropertyValue -Path "HKLM:\SOFTWARE\citrix\ProvisioningServer" -Name TargetDir) + "drivers\CFsDep2.sys"
-                        Copy-Item -Path $PVSDriverPath -Destination "$($env:SystemRoot)\system32\drivers\" -Force                            
+                        $PVSDriverPath = (Get-ItemPropertyValue -Path "HKLM:\SOFTWARE\citrix\ProvisioningServer" -Name TargetDir) + "drivers\CFsDep2.inf"
+                        Start-Process -FilePath "cmd.exe" -ArgumentList "/c rundll32.exe setupapi,InstallHinfSection DefaultInstall 128 $PVSDriverPath"                                                
                     }
 
                     # Check for reboot

@@ -15,7 +15,6 @@ function Get-TargetResource {
         [System.String] $DatabaseServer,
 
         [Parameter()]
-        [ValidateNotNullOrEmpty()]
         [System.String] $DatabaseInstance,
 
         [Parameter()]
@@ -193,7 +192,6 @@ function Test-TargetResource {
         [System.String] $DatabaseServer,
 
         [Parameter()]
-        [ValidateNotNullOrEmpty()]
         [System.String] $DatabaseInstance,
 
         [Parameter()]
@@ -296,7 +294,6 @@ function Set-TargetResource {
         [System.String] $DatabaseServer,
 
         [Parameter()]
-        [ValidateNotNullOrEmpty()]
         [System.String] $DatabaseInstance,
 
         [Parameter()]
@@ -429,10 +426,10 @@ function Set-TargetResource {
         }
 
         if ( [string]::IsNullOrEmpty($ManagementIP) ) {
-            $PVSConfig += "ManagementNetwworkAdapterIP=" + $IPv4Address + "`r`n"
+            $PVSConfig += "ManagementNetworkAdapterIP=" + $IPv4Address + "`r`n"
         }
         else {
-            $PVSConfig += "ManagementNetwworkAdapterIP=" + $ManagementIP + "`r`n"
+            $PVSConfig += "ManagementNetworkAdapterIP=" + $ManagementIP + "`r`n"
         }
 
         $PVSConfig += "IpcPortBase=" + $FirstStreamingPort + "`r`n"

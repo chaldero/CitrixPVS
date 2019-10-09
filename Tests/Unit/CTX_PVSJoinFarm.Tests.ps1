@@ -423,8 +423,8 @@ InModuleScope $sut {
                 $content | Select-String -Pattern ("StreamNetworkAdapterIP=" + $testParams['StreamingIP']) | Should be $true
             }
 
-            It "should set ManagementNetwworkAdapterIP=$($testParams['ManagementIP'])" {
-                $content | Select-String -Pattern ("ManagementNetwworkAdapterIP=" + $testParams['ManagementIP']) | Should be $true
+            It "should set ManagementNetworkAdapterIP=$($testParams['ManagementIP'])" {
+                $content | Select-String -Pattern ("ManagementNetworkAdapterIP=" + $testParams['ManagementIP']) | Should be $true
             }
 
             It "should set IpcPortBase=$($testParams['FirstStreamingPort'])" {

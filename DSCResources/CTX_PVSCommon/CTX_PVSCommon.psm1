@@ -133,7 +133,6 @@ function GetPVSInstalledRole {
         [System.String[]] $Role
     )
     process {
-        Write-Host "Testing roles 3: $Role"
         $installedProducts = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue |
             Where-Object { $_.DisplayName -like '*Citrix*' -and $_.DisplayName -notlike '*snap-in' } |
             Select-Object -ExpandProperty DisplayName;

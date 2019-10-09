@@ -34,7 +34,6 @@ function Get-TargetResource {
             SourcePath = $SourcePath;
             Ensure     = 'Absent';
         }
-        Write-Verbose "Testing roles: $Roles"
         if (TestPVSInstalledRole -Role $Roles) {
             $targetResource['Ensure'] = 'Present';
         }

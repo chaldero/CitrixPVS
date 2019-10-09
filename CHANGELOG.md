@@ -1,5 +1,10 @@
 # Change log for CitrixPVS
 
+## Version 1.0.5
+
+- CFsDep2.sys code issue fixed
+- Type corrected in unattended file
+
 ## Version 1.0.4
 
 - CFsDep2.sys Copy added due to issue in unattended installation

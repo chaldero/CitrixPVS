@@ -112,14 +112,14 @@ InModuleScope $sut {
             Mock -CommandName GetPVSUninstallString -MockWith { "UninstallString" }
             Mock -CommandName Test-Path -MockWith { return $true; }
             Mock -CommandName Rename-ItemProperty -ParameterFilter {$Path -eq "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager"} -MockWith {} 
-            Mock -CommandName Get-ItemPropertyValue -ParameterFilter {$Path -eq "HKLM:\SOFTWARE\citrix\ProvisioningServer"} -MockWith {}
-            Mock -CommandName Copy-Item -ParameterFilter {$Path -match "CFsDep2.sys" } -MockWith {}
+            Mock -CommandName Start-Process -ParameterFilter {$ArgumentList -match "CFsDep2.inf"} -MockWith { } 
+            Mock -CommandName Get-ItemPropertyValue -ParameterFilter {$Path -eq "HKLM:\SOFTWARE\citrix\ProvisioningServer"} -MockWith {return "C:\Program Files\Citrix\Provisioning Services\" }      
 
             foreach ($state in @('Present','Absent')) {
                 foreach ($role in @('Console','TDS', 'Server')) {
                     It "runs a setup 1 time when ""Ensure"" = ""$state"", ""Role"" = ""$($role -join ',')"" and exit code ""0""" {
                         [System.Int32] $global:DSCMachineStatus = 0;
-                        
+           
                         Set-TargetResource -Roles $role -SourcePath $testDrivePath -Ensure $state -Credential $mycreds;
                         [System.Int32] $global:DSCMachineStatus | Should Be 0;
                         Assert-MockCalled -CommandName StartWaitProcess -Exactly 1 -Scope It;
@@ -127,9 +127,9 @@ InModuleScope $sut {
                 }
             }
 
-            It "runs Copy-Item 1 time in order to copy CFsDep2.sys" {
+            It "runs rundll32.exe 1 time in order to install CFsDep2.sys" {
                 Set-TargetResource -Roles $role -SourcePath $testDrivePath -Ensure 'Present' -Credential $mycreds;
-                Assert-MockCalled -CommandName Copy-Item -ParameterFilter {$Path -match "CFsDep2.sys" } -Exactly 1 -Scope It;
+                Assert-MockCalled -CommandName Start-Process -ParameterFilter {$ArgumentList -match "CFsDep2.inf" } -Exactly 1 -Scope It;
             }
 
             foreach ($state in @('Present','Absent')) {
@@ -141,7 +141,9 @@ InModuleScope $sut {
                         Mock -CommandName ResolvePVSSetupArguments -MockWith { }
                         Mock -CommandName GetPVSUninstallString -MockWith { "UninstallString" }
                         Mock -CommandName Test-Path -MockWith { return $true; }
-                        Mock -CommandName Rename-ItemProperty -ParameterFilter {$Path -eq "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager"} -MockWith {} 
+                        Mock -CommandName Rename-ItemProperty -ParameterFilter {$Path -eq "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager"} -MockWith {}
+                        Mock -CommandName Start-Process -ParameterFilter {$ArgumentList -match "CFsDep2.inf"} -MockWith { } 
+                        Mock -CommandName Get-ItemPropertyValue -ParameterFilter {$Path -eq "HKLM:\SOFTWARE\citrix\ProvisioningServer"} -MockWith {return "C:\Program Files\Citrix\Provisioning Services\" } 
                         Set-TargetResource -Roles $role -SourcePath $testDrivePath -Ensure $state -Credential $mycreds;
                         [System.Int32] $global:DSCMachineStatus | Should Be 0;
                         Assert-MockCalled -CommandName StartWaitProcess -Exactly 2 -Scope It;

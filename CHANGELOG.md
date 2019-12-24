@@ -1,5 +1,9 @@
 # Change log for CitrixPVS
 
+## Version 1.0.6
+
+- Added Install detection for newer PVS versions (DisplayName changed)
+
 ## Version 1.0.5
 
 - CFsDep2.sys code issue fixed

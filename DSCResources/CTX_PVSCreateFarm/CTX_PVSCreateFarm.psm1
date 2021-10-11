@@ -120,7 +120,7 @@ function Get-TargetResource {
         throw "Error loading PVS Powershell module..."
     }
 
-    try {
+    try {        
         $pvsfarm = Get-PvsFarm
         $pvsStore = Get-PvsStore
         $pvsAuthGroup = Get-PvsAuthGroup | Select-Object -ExpandProperty AuthGroupName
@@ -513,6 +513,7 @@ function Set-TargetResource {
             $params = "/a:$ConfWizardANSFile /o:$ConfigWizardLogFile"
             Write-Verbose "Command: $ConfigWizardEXE $params -WindowStyle Hidden -Wait"   
             start-process -FilePath "$ConfigWizardEXE" -ArgumentList $params -WindowStyle Hidden -Wait  # There is no need for a try / catch statement since the ConfigWizard always exists with code 0
+            $global:DSCMachineStatus = 1 # Force Reboot
         }
         else {
             throw [System.IO.FileNotFoundException] "ConfigWizard.exe not found"

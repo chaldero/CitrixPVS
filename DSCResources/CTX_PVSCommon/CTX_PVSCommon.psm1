@@ -143,13 +143,13 @@ function GetPVSInstalledRole {
             switch ($r) {
 
                 'Console' {
-                    $filter = '*Provisioning Services Console x64,Citrix Provisioning Console x64*';
+                    $filter = '*Provisioning Services Console x64,Citrix*Provisioning Console x64*';
                 }
                 'Server' {
-                    $filter = '*Provisioning Services x64,Citrix Provisioning Server x64*';
+                    $filter = '*Provisioning Services x64,*Citrix*Provisioning Server x64*';
                 }
                 'TDS' {
-                    $filter = '*Provisioning Services Target Device x64,Citrix Provisioning Target Device x64*';
+                    $filter = '*Provisioning Services Target Device x64,Citrix*Provisioning Target Device x64*';
                 }
             }
 

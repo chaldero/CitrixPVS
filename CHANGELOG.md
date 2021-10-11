@@ -1,5 +1,9 @@
 # Change log for CitrixPVS
 
+## Version 1.0.7
+
+- Added support for 1912 CU3
+
 ## Version 1.0.6
 
 - Added Install detection for newer PVS versions (DisplayName changed)
